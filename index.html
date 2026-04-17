@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Hub Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .menu-card {
+            background: #1c1c1e;
+            border-radius: 24px;
+            padding: 24px 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid #2c2c2e;
+        }
+        
+        .menu-card:active {
+            background: #2a2a2c;
+            transform: scale(0.98);
+        }
+        
+        .menu-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .menu-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .menu-subtitle {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-top: 5px;
+        }
+        
+        .back-btn {
+            color: #007aff;
+            margin-bottom: 20px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .quiz-option {
+            background: #2c2c2e;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .quiz-option.correct {
+            background: rgba(50, 215, 75, 0.2);
+            border: 1px solid #32d74b;
+        }
+        
+        .quiz-option.wrong {
+            background: rgba(255, 69, 58, 0.2);
+            border: 1px solid #ff453a;
+        }
+        
+        .explanation {
+            background: rgba(0, 122, 255, 0.1);
+            padding: 15px;
+            border-radius: 14px;
+            margin: 15px 0;
+            border-left: 3px solid #007aff;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #2c2c2e;
+            border-top-color: #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            background: #2c2c2e;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #8e8e93;
+            font-size: 14px;
+        }
+        
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .difficulty-btn {
+            flex: 1;
+            background: #2c2c2e;
+            margin-top: 0;
+        }
+        
+        .difficulty-btn.active {
+            background: #007aff;
+        }
+        
+        .result-box {
+            background: #2c2c2e;
+            padding: 20px;
+            border-radius: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #007aff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Главное меню -->
+        <div id="main-page" class="page active">
+            <div class="menu-card" onclick="showPage('calc-page')">
+                <div class="menu-icon">🖨️</div>
+                <div class="menu-title">Калькулятор</div>
+                <div class="menu-subtitle">Расчет стоимости печати</div>
+            </div>
+            <div class="menu-card" onclick="showPage('quiz-page')">
+                <div class="menu-icon">🤖</div>
+                <div class="menu-title">AI Викторина</div>
+                <div class="menu-subtitle">Вопросы от GigaChat</div>
+            </div>
+        </div>
+        
+        <!-- Страница калькулятора -->
+        <div id="calc-page" class="page">
+            <div class="back-btn" onclick="showPage('main-page')">← На главную</div>
+            <h2 style="text-align: center; margin-bottom: 20px;">3D Калькулятор</h2>
+            
+            <label>Вес модели (г)</label>
+            <input type="number" id="weight" placeholder="0">
+            
+            <label>Время печати</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="hours" placeholder="Часы" style="flex:1">
+                <input type="number" id="mins" placeholder="Минуты" style="flex:1">
+            </div>
+            
+            <label>Цена электричества (руб/кВт·ч)</label>
+            <input type="number" id="elec-price" value="5.5" step="0.1">
+            
+            <button onclick="calculate()">Рассчитать</button>
+            
+            <div id="calc-result" class="result-box" style="display: none;"></div>
+        </div>
+        
+        <!-- Страница викторины -->
+        <div id="quiz-page" class="page">
+            <div class="back-btn" onclick="showPage('main-page')">← На главную</div>
+            <h2 style="text-align: center; margin-bottom: 20px;">🤖 AI Викторина</h2>
+            
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn" onclick="setDifficulty('easy')">🌱 Новичок</button>
+                <button class="difficulty-btn active" onclick="setDifficulty('medium')">⚡ Средний</button>
+                <button class="difficulty-btn" onclick="setDifficulty('hard')">🏆 Эксперт</button>
+            </div>
+            
+            <button onclick="startQuiz()">🎮 Начать викторину</button>
+            
+            <div id="quiz-container" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let quizState = {
+            active: false,
+            questions: [],
+            currentIndex: 0,
+            score: 0,
+            answered: false,
+            selectedAnswer: null,
+            difficulty: "medium"
+        };
+        
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+        
+        function setDifficulty(level) {
+            quizState.difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                if (btn.textContent.includes(level === 'easy' ? 'Новичок' : level === 'medium' ? 'Средний' : 'Эксперт')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        async function startQuiz() {
+            quizState.active = true;
+            quizState.loading = true;
+            
+            document.getElementById('quiz-container').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>🤖 GigaChat генерирует вопросы...</div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/generate_quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty: quizState.difficulty })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.questions) {
+                    quizState.questions = data.questions;
+                    quizState.currentIndex = 0;
+                    quizState.score = 0;
+                    quizState.answered = false;
+                    showQuestion();
+                } else {
+                    throw new Error(data.error || 'Ошибка');
+                }
+            } catch (error) {
+                document.getElementById('quiz-container').innerHTML = `
+                    <div style="background: rgba(255,69,58,0.2); padding: 20px; border-radius: 14px; text-align: center;">
+                        ⚠️ Ошибка: ${error.message}<br><br>
+                        💡 Убедитесь, что сервер запущен<br>
+                        💡 В терминале выполните: python server.py
+                    </div>
+                `;
+            }
+        }
+        
+        function showQuestion() {
+            const q = quizState.questions[quizState.currentIndex];
+            const total = quizState.questions.length;
+            
+            let optionsHtml = '';
+            q.options.forEach((opt, idx) => {
+                let extraClass = '';
+                if (quizState.answered) {
+                    if (idx === q.correct) extraClass = 'correct';
+                    if (idx === quizState.selectedAnswer && idx !== q.correct) extraClass = 'wrong';
+                }
+                optionsHtml += `
+                    <div class="quiz-option ${extraClass}" onclick="${!quizState.answered ? `selectAnswer(${idx})` : ''}">
+                        ${String.fromCharCode(65+idx)}. ${opt}
+                    </div>
+                `;
+            });
+            
+            let explanationHtml = '';
+            if (quizState.answered && q.explanation) {
+                explanationHtml = `<div class="explanation">📖 ${q.explanation}</div>`;
+            }
+            
+            let nextHtml = '';
+            if (quizState.answered) {
+                if (quizState.currentIndex + 1 < total) {
+                    nextHtml = '<button onclick="nextQuestion()">Следующий вопрос →</button>';
+                } else {
+                    nextHtml = '<button onclick="finishQuiz()">🏁 Завершить</button>';
+                }
+            }
+            
+            document.getElementById('quiz-container').innerHTML = `
+                <div style="text-align: center; color: #8e8e93; margin-bottom: 10px;">${quizState.currentIndex+1}/${total}</div>
+                <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">${q.question}</div>
+                ${optionsHtml}
+                ${explanationHtml}
+                ${nextHtml}
+                <div style="text-align: center; margin-top: 20px;">🎯 Счет: ${quizState.score}</div>
+            `;
+        }
+        
+        function selectAnswer(idx) {
+            if (quizState.answered) return;
+            quizState.answered = true;
+            quizState.selectedAnswer = idx;
+            if (idx === quizState.questions[quizState.currentIndex].correct) {
+                quizState.score++;
+            }
+            showQuestion();
+        }
+        
+        function nextQuestion() {
+            quizState.currentIndex++;
+            quizState.answered = false;
+            quizState.selectedAnswer = null;
+            showQuestion();
+        }
+        
+        function finishQuiz() {
+            const total = quizState.questions.length;
+            const percent = Math.round(quizState.score / total * 100);
+            let message = percent === 100 ? "🏆 Идеально!" : percent >= 70 ? "👍 Хорошо!" : "📚 Учись дальше!";
+            
+            document.getElementById('quiz-container').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div class="score">${quizState.score}/${total}</div>
+                    <div>${percent}%</div>
+                    <div style="margin: 20px 0;">${message}</div>
+                    <button onclick="startQuiz()">🔄 Новая игра</button>
+                </div>
+            `;
+            quizState.active = false;
+        }
+        
+        function calculate() {
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const hours = parseFloat(document.getElementById('hours').value) || 0;
+            const mins = parseFloat(document.getElementById('mins').value) || 0;
+            const elecPrice = parseFloat(document.getElementById('elec-price').value) || 5.5;
+            
+            const timeHours = hours + mins / 60;
+            const power = 650;
+            const costElec = (power * timeHours / 1000) * elecPrice;
+            const costMat = (weight / 1000) * 1000;
+            const total = costMat + costElec;
+            
+            const resultDiv = document.getElementById('calc-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div style="font-size: 28px; font-weight: bold; color: #007aff;">${total.toFixed(2)} руб.</div>
+                <div>Пластик: ${costMat.toFixed(2)} руб.</div>
+                <div>Энергия: ${costElec.toFixed(2)} руб.</div>
+                <div style="margin-top: 15px; color: #32d74b;">💰 Цена продажи: ${(total * 3).toFixed(0)} руб.</div>
+            `;
+        }
+    </script>
+</body>
+</html>
