@@ -16,10 +16,12 @@ CORS(app)
 # Берем ключ из переменной окружения
 GIGACHAT_API_KEY = os.getenv("GIGACHAT_API_KEY")
 
-# Если ключ не найден в .env, используем тот, что в коде (для теста)
 if not GIGACHAT_API_KEY:
-    GIGACHAT_API_KEY = "MDE5ZDljZDYtMTc4Yi03NjA0LThkNTItMDg3YjZhZjU2YmViOjM2Y2VkNTBhLWNhYzMtNGEzNy1hMGNkLTFmZjliZmU5NDAzNw=="
-    print("⚠️ Используется ключ из кода (небезопасно)")
+    print("=" * 50)
+    print("❌ ОШИБКА: Не найден API ключ GIGACHAT_API_KEY")
+    print("💡 На Render: добавьте переменную окружения в разделе Environment")
+    print("💡 Локально: создайте файл .env и напишите: GIGACHAT_API_KEY=ваш_ключ")
+    print("=" * 50)
 
 ACCESS_TOKEN = None
 
