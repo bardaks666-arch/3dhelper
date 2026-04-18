@@ -2,398 +2,1179 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>3D Hub Pro</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-color: #000000; --card-bg: #1c1c1e; --text-color: #ffffff;
+            --accent-color: #007aff; --danger-color: #ff453a; --success-color: #32d74b;
+            --warning-color: #ff9f0a; --input-bg: #2c2c2e; --nav-bg: #121212;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background: #000000;
-            color: #ffffff;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 0; display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
         }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15px 100px 15px;
         }
-        
-        .menu-card {
-            background: #1c1c1e;
-            border-radius: 24px;
-            padding: 24px 20px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            text-align: center;
-            border: 1px solid #2c2c2e;
-        }
-        
-        .menu-card:active {
-            background: #2a2a2c;
-            transform: scale(0.98);
-        }
-        
-        .menu-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        .menu-title {
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .menu-subtitle {
-            font-size: 14px;
-            color: #8e8e93;
-            margin-top: 5px;
-        }
-        
-        .back-btn {
-            color: #007aff;
-            margin-bottom: 20px;
-            cursor: pointer;
-            display: inline-block;
-        }
-        
-        button {
-            width: 100%;
-            padding: 15px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        .quiz-option {
-            background: #2c2c2e;
-            padding: 14px;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-        
-        .quiz-option.correct {
-            background: rgba(50, 215, 75, 0.2);
-            border: 1px solid #32d74b;
-        }
-        
-        .quiz-option.wrong {
-            background: rgba(255, 69, 58, 0.2);
-            border: 1px solid #ff453a;
-        }
-        
-        .explanation {
-            background: rgba(0, 122, 255, 0.1);
-            padding: 15px;
-            border-radius: 14px;
-            margin: 15px 0;
-            border-left: 3px solid #007aff;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #2c2c2e;
-            border-top-color: #007aff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
+
         .page {
             display: none;
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
         }
-        
+
         .page.active {
             display: block;
         }
-        
-        input {
-            width: 100%;
-            padding: 14px;
-            background: #2c2c2e;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
+
+        /* Главное меню (крупные значки) */
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .menu-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.2s ease;
+            border: 1px solid #2c2c2e;
+        }
+        .menu-card:active {
+            transform: scale(0.98);
+            background: #2a2a2c;
+        }
+        .menu-icon {
+            font-size: 52px;
+            width: 70px;
+            text-align: center;
+        }
+        .menu-text {
+            flex: 1;
+        }
+        .menu-text h2 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+        .menu-text p {
+            margin: 0;
+            font-size: 14px;
+            color: #8e8e93;
+        }
+
+        /* Карточки */
+        .container-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-sizing: border-box;
             margin-bottom: 15px;
         }
-        
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            margin-top: 0;
+        }
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #8e8e93;
+            margin: 20px 0 10px 10px;
+            letter-spacing: 1px;
+        }
         label {
             display: block;
+            font-size: 14px;
             margin-bottom: 8px;
             color: #8e8e93;
+        }
+        
+        input, select {
+            width: 100%;
+            height: 44px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: none;
+            background: var(--input-bg);
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+        .row-slim {
+            display: flex;
+            gap: 10px;
+        }
+        .row-slim > div {
+            flex: 1;
+        }
+        button {
+            width: 100%;
+            height: 50px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .btn-main {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #3a3a3c;
+            color: white;
+        }
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .btn-settings {
+            background-color: #2c2c2e;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+        
+        .printer-info {
+            font-size: 13px;
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(0, 122, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #2c2c2e;
+            border-radius: 16px;
+            line-height: 1.6;
+        }
+
+        /* Гайды */
+        .guide-item {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+        .guide-icon-circle {
+            width: 40px;
+            height: 40px;
+            background: #3a3a3c;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        .guide-content {
+            display: none;
+        }
+        .guide-content.active {
+            display: block;
+        }
+        .back-btn {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: 500;
+        }
+        
+        .status-box {
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .status-error {
+            background: rgba(255, 69, 58, 0.15);
+            border: 1px solid var(--danger-color);
+            color: #ffd6d6;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 14px;
+            background: #000;
+            margin: 10px 0 20px 0;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        
+        .compact-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .settings-panel {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        .settings-panel h3 {
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            color: #8e8e93;
+        }
+        
+        .inline-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .inline-buttons button {
+            flex: 1;
+            margin-top: 0;
+            height: 40px;
             font-size: 14px;
         }
         
-        .difficulty-buttons {
+        .list-item {
+            background: var(--input-bg);
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .list-item.selected {
+            border: 1px solid var(--accent-color);
+            background: rgba(0, 122, 255, 0.15);
+        }
+        .list-item-info {
+            flex: 1;
+        }
+        .list-item-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .list-item-desc {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        .warning-text {
+            background: rgba(255, 159, 10, 0.15);
+            padding: 12px;
+            border-radius: 12px;
+            border-left: 3px solid var(--warning-color);
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        .success-badge {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        .danger-badge {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        .accent-badge {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        /* ===== СТИЛИ ДЛЯ ВИКТОРИНЫ (добавлены) ===== */
+        .difficulty-selector {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
-        
         .difficulty-btn {
             flex: 1;
-            background: #2c2c2e;
+            background: var(--input-bg);
+            color: white;
             margin-top: 0;
+            height: 44px;
         }
-        
         .difficulty-btn.active {
-            background: #007aff;
+            background: var(--accent-color);
         }
-        
-        .result-box {
-            background: #2c2c2e;
-            padding: 20px;
-            border-radius: 16px;
-            margin-top: 20px;
+        .quiz-question {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
             text-align: center;
         }
-        
-        .score {
-            font-size: 48px;
+        .quiz-option {
+            background: var(--input-bg);
+            padding: 14px 16px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .quiz-option:hover {
+            background: #3a3a3c;
+        }
+        .quiz-option.correct {
+            background: rgba(50, 215, 75, 0.2);
+            border-color: var(--success-color);
+        }
+        .quiz-option.wrong {
+            background: rgba(255, 69, 58, 0.2);
+            border-color: var(--danger-color);
+        }
+        .quiz-progress {
+            font-size: 14px;
+            color: #8e8e93;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .quiz-score {
+            font-size: 18px;
             font-weight: bold;
-            color: #007aff;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .explanation {
+            background: rgba(0, 122, 255, 0.1);
+            padding: 15px;
+            border-radius: 14px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 3px solid var(--accent-color);
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--card-bg);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Главное меню -->
-        <div id="main-page" class="page active">
-            <div class="menu-card" onclick="showPage('calc-page')">
-                <div class="menu-icon">🖨️</div>
-                <div class="menu-title">Калькулятор</div>
-                <div class="menu-subtitle">Расчет стоимости печати</div>
+
+    <div class="content">
+        <!-- Главный экран с крупными значками -->
+        <div id="page-main" class="page active">
+            <div class="main-menu">
+                <div class="menu-card" onclick="switchPage('page-calc', null)">
+                    <div class="menu-icon">🖨️</div>
+                    <div class="menu-text">
+                        <h2>Калькулятор</h2>
+                        <p>Расчет стоимости печати</p>
+                    </div>
+                </div>
+                <div class="menu-card" onclick="switchPage('page-guides', null)">
+                    <div class="menu-icon">📚</div>
+                    <div class="menu-text">
+                        <h2>Гайды</h2>
+                        <p>Инструкции и калибровка</p>
+                    </div>
+                </div>
+                <!-- НОВАЯ КНОПКА: AI Викторина -->
+                <div class="menu-card" onclick="switchPage('page-quiz', null)">
+                    <div class="menu-icon">🤖</div>
+                    <div class="menu-text">
+                        <h2>AI Викторина</h2>
+                        <p>GigaChat генерирует вопросы</p>
+                    </div>
+                </div>
+                <div class="menu-card" onclick="showMainSettings()">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-text">
+                        <h2>Настройки</h2>
+                        <p>Дополнительные параметры</p>
+                    </div>
+                </div>
             </div>
-            <div class="menu-card" onclick="showPage('quiz-page')">
-                <div class="menu-icon">🤖</div>
-                <div class="menu-title">AI Викторина</div>
-                <div class="menu-subtitle">Вопросы от GigaChat</div>
+        </div>
+
+        <!-- Страница калькулятора (БЕЗ ИЗМЕНЕНИЙ) -->
+        <div id="page-calc" class="page">
+            <div class="container-box">
+                <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
+                <h2>3D Калькулятор</h2>
+                
+                <!-- Выбор принтера -->
+                <div class="input-group">
+                    <label>🖨️ Принтер</label>
+                    <select id="edit-printer-select" onchange="saveSelection()"></select>
+                </div>
+                
+                <!-- Выбор филамента -->
+                <div class="input-group">
+                    <label>🧵 Филамент</label>
+                    <select id="filament-select" onchange="saveSelection()"></select>
+                </div>
+                
+                <!-- Кнопка настройки (ведет на отдельный экран) -->
+                <button class="btn-settings" onclick="switchPage('page-manage', null)">⚙️ Настройки (филамент/принтер)</button>
+                
+                <div class="settings-panel">
+                    <h3>📊 Параметры расчета</h3>
+                    <div class="input-group"><label>Количество моделей</label><input type="number" id="quantity" value="1" min="1" placeholder="1" inputmode="decimal"></div>
+                    <div class="input-group"><label>Вес одной модели (г)</label><input type="number" id="weight" placeholder="0" inputmode="decimal"></div>
+                    <div class="input-group"><label>Время печати одной модели</label><div class="row"><input type="number" id="hours" placeholder="Ч"><input type="number" id="mins" placeholder="Мин"></div></div>
+                    <div id="printer-display" class="printer-info"></div>
+                    <div class="input-group"><label>Электричество (руб/кВт·ч)</label><input type="number" id="elec-price" step="0.1"></div>
+                    
+                    <div class="row-slim">
+                        <div>
+                            <label class="compact-label">Доп. расходы (руб)</label>
+                            <input type="number" id="extra-cost" placeholder="0" value="0" step="any">
+                        </div>
+                        <div>
+                            <label class="compact-label">Амортизация (%)</label>
+                            <input type="number" id="amort-perc" value="20" step="any">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn-main" onclick="calculate()">Рассчитать</button>
+                <div id="result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Страница управления принтерами и филаментами (БЕЗ ИЗМЕНЕНИЙ) -->
+        <div id="page-manage" class="page">
+            <div class="container-box">
+                <div class="back-btn" onclick="switchPage('page-calc', null)">← К калькулятору</div>
+                <h2>Управление</h2>
+                
+                <!-- Принтеры -->
+                <div class="settings-panel">
+                    <h3>🖨️ Принтеры</h3>
+                    <div id="printers-list"></div>
+                    <div class="inline-buttons">
+                        <button class="btn-secondary" onclick="showEditor('printer', null)">+ Добавить</button>
+                        <button class="btn-danger" onclick="deleteItem('printer')">Удалить выбранный</button>
+                    </div>
+                </div>
+                
+                <!-- Филаменты -->
+                <div class="settings-panel">
+                    <h3>🧵 Филаменты</h3>
+                    <div id="filaments-list"></div>
+                    <div class="inline-buttons">
+                        <button class="btn-secondary" onclick="showEditor('filament', null)">+ Добавить</button>
+                        <button class="btn-danger" onclick="deleteItem('filament')">Удалить выбранный</button>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Страница калькулятора -->
-        <div id="calc-page" class="page">
-            <div class="back-btn" onclick="showPage('main-page')">← На главную</div>
-            <h2 style="text-align: center; margin-bottom: 20px;">3D Калькулятор</h2>
-            
-            <label>Вес модели (г)</label>
-            <input type="number" id="weight" placeholder="0">
-            
-            <label>Время печати</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="number" id="hours" placeholder="Часы" style="flex:1">
-                <input type="number" id="mins" placeholder="Минуты" style="flex:1">
+        <!-- НОВАЯ СТРАНИЦА: AI Викторина -->
+        <div id="page-quiz" class="page">
+            <div class="container-box">
+                <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
+                <h2>🤖 AI Викторина</h2>
+                <p style="text-align: center; font-size: 13px; color: #8e8e93; margin-bottom: 15px;">Вопросы генерирует GigaChat</p>
+                
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn" data-diff="easy" onclick="setDifficulty('easy')">🌱 Новичок</button>
+                    <button class="difficulty-btn active" data-diff="medium" onclick="setDifficulty('medium')">⚡ Продвинутый</button>
+                    <button class="difficulty-btn" data-diff="hard" onclick="setDifficulty('hard')">🏆 Эксперт</button>
+                </div>
+                
+                <button class="btn-main" onclick="startQuiz()">🎮 Начать викторину</button>
+                <div id="quiz-container" style="margin-top: 20px;"></div>
             </div>
-            
-            <label>Цена электричества (руб/кВт·ч)</label>
-            <input type="number" id="elec-price" value="5.5" step="0.1">
-            
-            <button onclick="calculate()">Рассчитать</button>
-            
-            <div id="calc-result" class="result-box" style="display: none;"></div>
         </div>
         
-        <!-- Страница викторины -->
-        <div id="quiz-page" class="page">
-            <div class="back-btn" onclick="showPage('main-page')">← На главную</div>
-            <h2 style="text-align: center; margin-bottom: 20px;">🤖 AI Викторина</h2>
-            
-            <div class="difficulty-buttons">
-                <button class="difficulty-btn" onclick="setDifficulty('easy')">🌱 Новичок</button>
-                <button class="difficulty-btn active" onclick="setDifficulty('medium')">⚡ Средний</button>
-                <button class="difficulty-btn" onclick="setDifficulty('hard')">🏆 Эксперт</button>
+        <!-- Страница гайдов (БЕЗ ИЗМЕНЕНИЙ) -->
+        <div id="page-guides" class="page">
+            <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
+            <div id="guide-categories">
+                <h2>База знаний</h2>
+                
+                <div class="section-title">Принтеры</div>
+                <div class="guide-item" onclick="showCategory('cat-flashforge')">
+                    <div class="guide-icon-circle">⚡</div>
+                    <div><div style="font-weight:bold;">FlashForge</div><div style="font-size:12px; color:#8e8e93;">AD5X / 5M / 5M Pro</div></div>
+                </div>
+                <div class="guide-item" onclick="showCategory('cat-reborn')">
+                    <div class="guide-icon-circle">🐻</div>
+                    <div><div style="font-weight:bold;">Flying Bear</div><div style="font-size:12px; color:#8e8e93;">Reborn 3</div></div>
+                </div>
+
+                <div class="section-title">Материалы</div>
+                <div class="guide-item" onclick="showCategory('cat-filament-calib')">
+                    <div class="guide-icon-circle">🌡️</div>
+                    <div><div style="font-weight:bold;">Калибровка филамента</div><div style="font-size:12px; color:#8e8e93;">Температура, поток и др.</div></div>
+                </div>
             </div>
-            
-            <button onclick="startQuiz()">🎮 Начать викторину</button>
-            
-            <div id="quiz-container" style="margin-top: 20px;"></div>
+
+            <div id="cat-flashforge" class="guide-content">
+                <div class="back-btn" onclick="showCategory('main')">← Назад</div>
+                <h2>FlashForge Гайды</h2>
+                <div class="guide-item" onclick="openGuide('guide-ff-firmware')">
+                    <div class="guide-icon-circle">💾</div>
+                    <div><div style="font-weight:bold;">Прошивка принтера</div><div style="font-size:12px; color:#8e8e93;">Пошаговое обновление</div></div>
+                </div>
+                <div class="guide-item" onclick="openGuide('guide-zoffset')">
+                    <div class="guide-icon-circle">🎯</div>
+                    <div><div style="font-weight:bold;">Настройка Z-offset</div><div style="font-size:12px; color:#8e8e93;">Идеальный первый слой</div></div>
+                </div>
+            </div>
+
+            <div id="cat-reborn" class="guide-content">
+                <div class="back-btn" onclick="showCategory('main')">← Назад</div>
+                <h2>Reborn 3 Гайды</h2>
+                <p style="text-align:center; color:#8e8e93; margin-top:40px;">Раздел скоро будет наполнен...</p>
+            </div>
+
+            <div id="cat-filament-calib" class="guide-content">
+                <div class="back-btn" onclick="showCategory('main')">← Назад</div>
+                <h2>Калибровка филамента</h2>
+                <div class="guide-item" onclick="openGuide('guide-temp-tower')">
+                    <div class="guide-icon-circle">🗼</div>
+                    <div><div style="font-weight:bold;">Температурная башня</div><div style="font-size:12px; color:#8e8e93;">Поиск оптимальной температуры</div></div>
+                </div>
+            </div>
+
+            <div id="guide-temp-tower" class="guide-content">
+                <div class="back-btn" onclick="showCategory('cat-filament-calib')">← К калибровкам</div>
+                <div class="container-box">
+                    <h3 style="margin-top:0; font-size: 18px;">Калибровка температуры печати для филамента(прутка) - Температурная башня</h3>
+                    
+                    <p style="font-size:14px; color:#ccc; margin-bottom: 15px;">
+                        Помогает подобрать оптимальную температуру печати (баланс прочности и качества).
+                    </p>
+                    
+                    <label>Как запустить в OrcaSlicer:</label>
+                    <ul style="font-size:14px; padding-left:20px; line-height:1.5; margin-bottom: 15px;">
+                        <li>Калибровка (Calibration) → Температурная башня (Temperature Tower)</li>
+                        <li>Выбери материал (PLA, PETG и т.д.)</li>
+                        <li>Слайсер создаст модель с разной температурой по высоте</li>
+                    </ul>
+
+                    <label>Как оценивать:</label>
+                    <p style="font-size:13px; margin-bottom:8px;">Смотри на каждый "этаж" и ищи баланс:</p>
+                    <ul style="font-size:13px; padding-left:20px; line-height:1.6; margin-bottom: 15px;">
+                        <li>Прочность (не ломается легко)</li>
+                        <li>Минимум нитей (stringing)</li>
+                        <li>Чистые нависания и мосты</li>
+                    </ul>
+
+                    <label>Как выбрать температуру:</label>
+                    <p style="font-size:13px; margin-bottom:15px; line-height:1.6;">
+                        Бери не самый красивый и не самый прочный этаж, а тот, где все показатели в балансе.
+                    </p>
+
+                    <label>Признаки:</label>
+                    <div style="font-size:13px; margin-bottom:15px; line-height:1.6;">
+                        • <b>Слишком высокая температура</b> → сопли, блеск, много нитей<br>
+                        • <b>Слишком низкая температура</b> → плохая прочность, шероховатость
+                    </div>
+
+                    <div style="background:#3a3a3c; padding:12px; border-radius:12px; font-size:13px; margin-bottom:20px; border-left:4px solid var(--accent-color);">
+                        <b>Важно:</b><br>
+                        Шаг температуры: ~5°C<br>
+                        Печатай с тем же обдувом, что и обычные детали
+                    </div>
+
+                    <label>Видео часть 1:</label>
+                    <div class="video-container">
+                        <iframe 
+                            src="https://rutube.ru/play/embed/98a014cb34b6837e790012f167e09951?p=f300m0UVw-sanWsOl8uTcQ&autoplay=false"
+                            loading="lazy"
+                            allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture;"
+                            frameborder="0"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+
+                    <label>Видео часть 2:</label>
+                    <div class="video-container">
+                        <iframe 
+                            src="https://rutube.ru/play/embed/57a2606b9db40f9c5d6619df60318cdb?p=7CpJln6ZFu-nWfUV7pfmBg&autoplay=false"
+                            loading="lazy"
+                            allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture;"
+                            frameborder="0"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div id="guide-ff-firmware" class="guide-content">
+                <div class="back-btn" onclick="showCategory('cat-flashforge')">← К списку FF</div>
+                <div class="container-box">
+                    <h3 style="margin-top:0;">Прошивка FlashForge</h3>
+                    <label>Инструкция:</label>
+                    <ul style="font-size:14px; padding-left:20px; line-height:1.6;">
+                        <li>Скачайте файл прошивки (раздел "Прошивки", формат <b>.tgz</b>)</li>
+                        <li>Отформатируйте флешку в <b>FAT32</b></li>
+                        <li>Закиньте файл <b>.tgz</b> в корень флешки</li>
+                        <li>Вставьте в <b>выключенный</b> принтер</li>
+                        <li>Включите принтер</li>
+                    </ul>
+                    <p style="font-size:14px; text-align:center; color:var(--warning-color); font-weight:bold;">Жди окончания (НЕ ВЫКЛЮЧАТЬ)</p>
+                    <label>После обновления:</label>
+                    <p style="font-size:13px; color:#ccc;">— вынуть флешку<br>— перезагрузить принтер<br>— сброс настроек<br>— калибровка стола<br>— настройка Z-offset</p>
+                    <label>Видео-инструкция:</label>
+                    <div class="video-container">
+                        <iframe src="https://vk.com/video_ext.php?oid=-157472376&id=456239017&hd=2&autoplay=0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div id="guide-zoffset" class="guide-content">
+                <div class="back-btn" onclick="showCategory('cat-flashforge')">← К списку FF</div>
+                <div class="container-box">
+                    <h3 style="margin-top:0; font-size: 20px;">Z-offset (смещение по Z)</h3>
+                    
+                    <p class="info-text">
+                        Определяет расстояние между соплом и столом в первом слое.<br>
+                        <strong>Это ключевая настройка адгезии и качества первого слоя.</strong>
+                    </p>
+                    
+                    <label>Как настроить (самый правильный способ):</label>
+                    <ol style="font-size:14px; padding-left:20px; line-height:1.5; margin-bottom: 15px;">
+                        <li><strong>Запусти тест первого слоя</strong><br>создать примитив (модель) 50×50×0,2 (толщина слоя)</li>
+                        <li><strong>Во время печати меняй Z-offset</strong><br>меняй положение сопла относительно стола</li>
+                    </ol>
+                    
+                    <label>Как выглядит правильный первый слой:</label>
+                    <ul style="font-size:14px; padding-left:20px; line-height:1.5; margin-bottom: 15px; color: var(--success-color);">
+                        <li>Линии слегка приплюснуты</li>
+                        <li>Нет зазоров между линиями</li>
+                        <li>Поверхность ровная, без борозд</li>
+                    </ul>
+                    
+                    <label>Признаки неправильного Z-offset:</label>
+                    
+                    <div class="warning-text">
+                        <strong class="danger-badge">⚠️ Слишком высоко (сопло далеко):</strong><br>
+                        • Линии круглые, не прижаты<br>
+                        • Есть щели между линиями<br>
+                        • Плохая адгезия (отлипает)
+                    </div>
+                    
+                    <div class="warning-text" style="border-left-color: var(--danger-color);">
+                        <strong class="danger-badge">⚠️ Слишком низко (сопло слишком близко):</strong><br>
+                        • Пластик "размазывается"<br>
+                        • Поверхность волнистая<br>
+                        • Могут быть пропуски/царапины<br>
+                        • Сопло может скрести стол
+                    </div>
+                    
+                    <label>Как двигать:</label>
+                    <ul style="font-size:14px; padding-left:20px; line-height:1.5; margin-bottom: 15px;">
+                        <li>Если не липнет → <strong class="accent-badge">опусти сопло</strong> (уменьши Z-offset, например -0.05)</li>
+                        <li>Если "давит" → <strong class="accent-badge">подними сопло</strong> (+0.05)</li>
+                    </ul>
+                    
+                    <div style="background:#3a3a3c; padding:12px; border-radius:12px; font-size:13px; margin-bottom:20px; border-left:4px solid var(--accent-color);">
+                        <strong>👉 Двигай маленькими шагами:</strong> 0.01–0.005 мм
+                    </div>
+                    
+                    <label>Видео часть 1:</label>
+                    <div class="video-container">
+                        <iframe src="https://vk.com/video_ext.php?oid=-157472376&id=456239019&hd=2&autoplay=0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <label>Видео часть 2:</label>
+                    <div class="video-container">
+                        <iframe src="https://vkvideo.ru/video_ext.php?oid=-157472376&id=456239020&hd=2&autoplay=0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Главные настройки (заглушка) -->
+        <div id="page-main-settings" class="page">
+            <div class="container-box">
+                <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">⚙️</div>
+                    <h2 style="margin-bottom: 15px;">Настройки</h2>
+                    <p style="color: #8e8e93; font-size: 16px;">Скоро здесь появятся дополнительные настройки</p>
+                    <button class="btn-main" style="margin-top: 30px;" onclick="switchPage('page-main', null)">Вернуться на главную</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница редактора (для добавления/изменения) -->
+        <div id="editor-scene" class="page">
+            <div class="container-box">
+                <div class="back-btn" onclick="switchPage('page-manage', null)">← Назад</div>
+                <h2 id="editor-title">Редактор</h2>
+                <div id="editor-fields"></div>
+                <button class="btn-success" onclick="saveEditor()">Сохранить</button>
+                <button class="btn-secondary" onclick="switchPage('page-manage', null)">Отмена</button>
+            </div>
         </div>
     </div>
 
-    <script>
-        let quizState = {
-            active: false,
-            questions: [],
-            currentIndex: 0,
-            score: 0,
-            answered: false,
-            selectedAnswer: null,
-            difficulty: "medium"
-        };
-        
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-        }
-        
-        function setDifficulty(level) {
-            quizState.difficulty = level;
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                if (btn.textContent.includes(level === 'easy' ? 'Новичок' : level === 'medium' ? 'Средний' : 'Эксперт')) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-        
-        async function startQuiz() {
-            quizState.active = true;
-            quizState.loading = true;
-            
-            document.getElementById('quiz-container').innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div>🤖 GigaChat генерирует вопросы...</div>
-                </div>
-            `;
-            
-            try {
-                const response = await fetch('/generate_quiz', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ difficulty: quizState.difficulty })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success && data.questions) {
-                    quizState.questions = data.questions;
-                    quizState.currentIndex = 0;
-                    quizState.score = 0;
-                    quizState.answered = false;
-                    showQuestion();
-                } else {
-                    throw new Error(data.error || 'Ошибка');
-                }
-            } catch (error) {
-                document.getElementById('quiz-container').innerHTML = `
-                    <div style="background: rgba(255,69,58,0.2); padding: 20px; border-radius: 14px; text-align: center;">
-                        ⚠️ Ошибка: ${error.message}<br><br>
-                        💡 Убедитесь, что сервер запущен<br>
-                        💡 В терминале выполните: python server.py
-                    </div>
-                `;
+<script>
+    vkBridge.send("VKWebAppInit");
+
+    let data = {
+        currentPrinterIndex: 0, currentFilamentIndex: 0, lastElectricityCost: 5.5,
+        printers: [{ name: "ad5x/5m/5mpro", power: 650, specs: "220x220x220" }],
+        filaments: [{ type: "PLA", cost_per_kg: 1000, density: 1.24 }, { type: "PETG", cost_per_kg: 900, density: 1.27 }]
+    };
+
+    // ===== ФУНКЦИИ ДЛЯ ВИКТОРИНЫ (добавлены) =====
+    let quizState = {
+        loading: false,
+        currentIndex: 0,
+        score: 0,
+        questions: [],
+        currentQuestion: null,
+        answered: false,
+        selectedAnswer: null,
+        difficulty: "medium"
+    };
+    
+    function setDifficulty(level) {
+        quizState.difficulty = level;
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            if (btn.getAttribute('data-diff') === level) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
             }
-        }
+        });
+    }
+    
+    async function startQuiz() {
+        if (quizState.loading) return;
         
-        function showQuestion() {
-            const q = quizState.questions[quizState.currentIndex];
-            const total = quizState.questions.length;
-            
-            let optionsHtml = '';
-            q.options.forEach((opt, idx) => {
-                let extraClass = '';
-                if (quizState.answered) {
-                    if (idx === q.correct) extraClass = 'correct';
-                    if (idx === quizState.selectedAnswer && idx !== q.correct) extraClass = 'wrong';
-                }
-                optionsHtml += `
-                    <div class="quiz-option ${extraClass}" onclick="${!quizState.answered ? `selectAnswer(${idx})` : ''}">
-                        ${String.fromCharCode(65+idx)}. ${opt}
-                    </div>
-                `;
+        quizState.loading = true;
+        renderQuizLoading();
+        
+        try {
+            const response = await fetch('/generate_quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ difficulty: quizState.difficulty })
             });
             
-            let explanationHtml = '';
-            if (quizState.answered && q.explanation) {
-                explanationHtml = `<div class="explanation">📖 ${q.explanation}</div>`;
-            }
+            const result = await response.json();
             
-            let nextHtml = '';
+            if (result.success && result.questions) {
+                quizState.questions = result.questions;
+                quizState.currentIndex = 0;
+                quizState.score = 0;
+                quizState.answered = false;
+                quizState.currentQuestion = result.questions[0];
+                renderQuizQuestion();
+            } else {
+                throw new Error(result.error || 'Не удалось получить вопросы');
+            }
+        } catch (error) {
+            renderQuizError(error.message);
+        } finally {
+            quizState.loading = false;
+        }
+    }
+    
+    function renderQuizLoading() {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = `
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <div style="color: #8e8e93;">🤖 GigaChat генерирует вопросы...</div>
+            </div>
+        `;
+    }
+    
+    function renderQuizError(errorMsg) {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = `
+            <div class="warning-text" style="text-align: center;">
+                ⚠️ Ошибка: ${errorMsg}<br><br>
+                💡 Убедитесь, что сервер запущен
+            </div>
+        `;
+    }
+    
+    function renderQuizQuestion() {
+        const container = document.getElementById('quiz-container');
+        if (!quizState.currentQuestion) return;
+        
+        const q = quizState.currentQuestion;
+        const progress = `${quizState.currentIndex + 1} / ${quizState.questions.length}`;
+        
+        let optionsHtml = '';
+        q.options.forEach((opt, idx) => {
+            let additionalClass = '';
             if (quizState.answered) {
-                if (quizState.currentIndex + 1 < total) {
-                    nextHtml = '<button onclick="nextQuestion()">Следующий вопрос →</button>';
-                } else {
-                    nextHtml = '<button onclick="finishQuiz()">🏁 Завершить</button>';
-                }
+                if (idx === q.correct) additionalClass = 'correct';
+                else if (idx === quizState.selectedAnswer && idx !== q.correct) additionalClass = 'wrong';
             }
-            
-            document.getElementById('quiz-container').innerHTML = `
-                <div style="text-align: center; color: #8e8e93; margin-bottom: 10px;">${quizState.currentIndex+1}/${total}</div>
-                <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">${q.question}</div>
-                ${optionsHtml}
-                ${explanationHtml}
-                ${nextHtml}
-                <div style="text-align: center; margin-top: 20px;">🎯 Счет: ${quizState.score}</div>
-            `;
-        }
-        
-        function selectAnswer(idx) {
-            if (quizState.answered) return;
-            quizState.answered = true;
-            quizState.selectedAnswer = idx;
-            if (idx === quizState.questions[quizState.currentIndex].correct) {
-                quizState.score++;
-            }
-            showQuestion();
-        }
-        
-        function nextQuestion() {
-            quizState.currentIndex++;
-            quizState.answered = false;
-            quizState.selectedAnswer = null;
-            showQuestion();
-        }
-        
-        function finishQuiz() {
-            const total = quizState.questions.length;
-            const percent = Math.round(quizState.score / total * 100);
-            let message = percent === 100 ? "🏆 Идеально!" : percent >= 70 ? "👍 Хорошо!" : "📚 Учись дальше!";
-            
-            document.getElementById('quiz-container').innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <div class="score">${quizState.score}/${total}</div>
-                    <div>${percent}%</div>
-                    <div style="margin: 20px 0;">${message}</div>
-                    <button onclick="startQuiz()">🔄 Новая игра</button>
+            optionsHtml += `
+                <div class="quiz-option ${additionalClass}" onclick="${!quizState.answered ? `selectAnswer(${idx})` : ''}">
+                    ${String.fromCharCode(65 + idx)}. ${opt}
                 </div>
             `;
-            quizState.active = false;
+        });
+        
+        let explanationHtml = '';
+        if (quizState.answered && q.explanation) {
+            explanationHtml = `<div class="explanation">📖 <strong>Объяснение:</strong><br>${q.explanation}</div>`;
         }
         
-        function calculate() {
-            const weight = parseFloat(document.getElementById('weight').value) || 0;
-            const hours = parseFloat(document.getElementById('hours').value) || 0;
-            const mins = parseFloat(document.getElementById('mins').value) || 0;
-            const elecPrice = parseFloat(document.getElementById('elec-price').value) || 5.5;
-            
-            const timeHours = hours + mins / 60;
-            const power = 650;
-            const costElec = (power * timeHours / 1000) * elecPrice;
-            const costMat = (weight / 1000) * 1000;
-            const total = costMat + costElec;
-            
-            const resultDiv = document.getElementById('calc-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <div style="font-size: 28px; font-weight: bold; color: #007aff;">${total.toFixed(2)} руб.</div>
-                <div>Пластик: ${costMat.toFixed(2)} руб.</div>
-                <div>Энергия: ${costElec.toFixed(2)} руб.</div>
-                <div style="margin-top: 15px; color: #32d74b;">💰 Цена продажи: ${(total * 3).toFixed(0)} руб.</div>
-            `;
+        let nextButton = '';
+        if (quizState.answered) {
+            if (quizState.currentIndex + 1 < quizState.questions.length) {
+                nextButton = '<button class="btn-main" style="margin-top: 20px;" onclick="nextQuestion()">Следующий вопрос →</button>';
+            } else {
+                nextButton = '<button class="btn-main" style="margin-top: 20px;" onclick="finishQuiz()">🏁 Завершить</button>';
+            }
         }
-    </script>
+        
+        container.innerHTML = `
+            <div class="quiz-progress">${progress}</div>
+            <div class="quiz-question">${q.question}</div>
+            ${optionsHtml}
+            ${explanationHtml}
+            ${nextButton}
+            <div class="quiz-score">🎯 Счет: ${quizState.score}</div>
+        `;
+    }
+    
+    function selectAnswer(idx) {
+        if (quizState.answered) return;
+        
+        quizState.answered = true;
+        quizState.selectedAnswer = idx;
+        
+        if (idx === quizState.currentQuestion.correct) {
+            quizState.score++;
+        }
+        
+        renderQuizQuestion();
+    }
+    
+    function nextQuestion() {
+        quizState.currentIndex++;
+        quizState.currentQuestion = quizState.questions[quizState.currentIndex];
+        quizState.answered = false;
+        quizState.selectedAnswer = null;
+        renderQuizQuestion();
+    }
+    
+    function finishQuiz() {
+        const total = quizState.questions.length;
+        const percent = Math.round(quizState.score / total * 100);
+        let message = percent === 100 ? "🏆 Идеально!" : percent >= 70 ? "👍 Отлично!" : "📚 Учись дальше!";
+        
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 48px; font-weight: bold; color: var(--accent-color);">${quizState.score}/${total}</div>
+                <div>${percent}%</div>
+                <div style="margin: 20px 0;">${message}</div>
+                <button class="btn-main" onclick="startQuiz()">🔄 Новая игра</button>
+            </div>
+        `;
+    }
+
+    // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ) =====
+    function switchPage(pageId, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        if (pageId === 'page-guides') {
+            showCategory('main');
+        }
+        if (pageId === 'page-calc') {
+            updateUI();
+        }
+        if (pageId === 'page-manage') {
+            updateManageLists();
+        }
+    }
+    
+    function showMainSettings() {
+        switchPage('page-main-settings', null);
+    }
+    
+    function updateManageLists() {
+        const printersDiv = document.getElementById('printers-list');
+        if (printersDiv) {
+            printersDiv.innerHTML = '';
+            data.printers.forEach((p, i) => {
+                const selectedClass = (i === data.currentPrinterIndex) ? 'selected' : '';
+                printersDiv.innerHTML += `
+                    <div class="list-item ${selectedClass}" onclick="selectPrinter(${i})">
+                        <div class="list-item-info">
+                            <div class="list-item-name">${p.name}</div>
+                            <div class="list-item-desc">${p.power} Вт | ${p.specs}</div>
+                        </div>
+                        <button class="btn-secondary" style="width: auto; padding: 8px 16px; margin: 0;" onclick="event.stopPropagation(); showEditor('printer', true, ${i})">✏️</button>
+                    </div>
+                `;
+            });
+        }
+        
+        const filamentsDiv = document.getElementById('filaments-list');
+        if (filamentsDiv) {
+            filamentsDiv.innerHTML = '';
+            data.filaments.forEach((f, i) => {
+                const selectedClass = (i === data.currentFilamentIndex) ? 'selected' : '';
+                filamentsDiv.innerHTML += `
+                    <div class="list-item ${selectedClass}" onclick="selectFilament(${i})">
+                        <div class="list-item-info">
+                            <div class="list-item-name">${f.type}</div>
+                            <div class="list-item-desc">${f.cost_per_kg} руб/кг | плотность ${f.density} г/см³</div>
+                        </div>
+                        <button class="btn-secondary" style="width: auto; padding: 8px 16px; margin: 0;" onclick="event.stopPropagation(); showEditor('filament', true, ${i})">✏️</button>
+                    </div>
+                `;
+            });
+        }
+    }
+    
+    function selectPrinter(index) {
+        data.currentPrinterIndex = index;
+        saveToStorage();
+        updateManageLists();
+    }
+    
+    function selectFilament(index) {
+        data.currentFilamentIndex = index;
+        saveToStorage();
+        updateManageLists();
+    }
+
+    function showCategory(catId) {
+        document.querySelectorAll('.guide-content').forEach(c => c.classList.remove('active'));
+        const categoriesDiv = document.getElementById('guide-categories');
+        if (categoriesDiv) {
+            if (catId === 'main') {
+                categoriesDiv.style.display = 'block';
+            } else {
+                categoriesDiv.style.display = 'none';
+                const target = document.getElementById(catId);
+                if (target) target.classList.add('active');
+            }
+        } else {
+            if (catId !== 'main') {
+                const target = document.getElementById(catId);
+                if (target) target.classList.add('active');
+            }
+        }
+    }
+
+    function openGuide(guideId) {
+        document.querySelectorAll('.guide-content').forEach(c => c.classList.remove('active'));
+        const target = document.getElementById(guideId);
+        if (target) target.classList.add('active');
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem('3d_hub_v12_full');
+        if (saved) data = JSON.parse(saved);
+        updateUI();
+    }
+
+    function saveToStorage() {
+        localStorage.setItem('3d_hub_v12_full', JSON.stringify(data));
+        updateUI();
+        updateManageLists();
+    }
+
+    function updateUI() {
+        const fSelect = document.getElementById('filament-select');
+        if (fSelect) {
+            fSelect.innerHTML = '';
+            data.filaments.forEach((f, i) => {
+                fSelect.innerHTML += `<option value="${i}">${f.type} (${f.cost_per_kg} руб/кг)</option>`;
+            });
+            fSelect.value = data.currentFilamentIndex;
+        }
+
+        const pEditSelect = document.getElementById('edit-printer-select');
+        if (pEditSelect) {
+            pEditSelect.innerHTML = '';
+            data.printers.forEach((p, i) => { 
+                pEditSelect.innerHTML += `<option value="${i}">${p.name} (${p.power} Вт)</option>`; 
+            });
+            pEditSelect.value = data.currentPrinterIndex;
+        }
+
+        const p = data.printers[data.currentPrinterIndex];
+        const pDisp = document.getElementById('printer-display');
+        if (pDisp && p) pDisp.innerText = `🔧 Текущий: ${p.name} | ${p.power} Вт | ${p.specs}`;
+        
+        const ePrice = document.getElementById('elec-price');
+        if (ePrice) ePrice.value = data.lastElectricityCost;
+    }
+
+    function saveSelection() {
+        const filamentSelect = document.getElementById('filament-select');
+        if (filamentSelect) {
+            data.currentFilamentIndex = parseInt(filamentSelect.value) || 0;
+        }
+        const printerEditSelect = document.getElementById('edit-printer-select');
+        if (printerEditSelect) {
+            data.currentPrinterIndex = parseInt(printerEditSelect.value) || 0;
+        }
+        saveToStorage();
+    }
+
+    let currentEditMode = null, currentEditIndex = null;
+    function showEditor(mode, edit, index = null) {
+        currentEditMode = mode;
+        if (edit && index !== null) {
+            currentEditIndex = index;
+        } else if (edit) {
+            currentEditIndex = (mode === 'printer') ? data.currentPrinterIndex : data.currentFilamentIndex;
+        } else {
+            currentEditIndex = null;
+        }
+        switchPage('editor-scene', null);
+        const fields = document.getElementById('editor-fields');
+        fields.innerHTML = '';
+        if (mode === 'printer') {
+            const item = (currentEditIndex !== null) ? data.printers[currentEditIndex] : {name:'', power:'', specs:''};
+            fields.innerHTML = `<label>Название принтера</label><input id="e1" value="${item.name}" placeholder="Например: Bambu Lab X1C"><label>Мощность (Вт)</label><input type="number" id="e2" value="${item.power}" placeholder="300"><label>Размер стола</label><input id="e3" value="${item.specs}" placeholder="256x256x256">`;
+        } else {
+            const item = (currentEditIndex !== null) ? data.filaments[currentEditIndex] : {type:'', cost_per_kg:'', density:''};
+            fields.innerHTML = `<label>Тип филамента</label><input id="e1" value="${item.type}" placeholder="PLA, PETG, ABS..."><label>Цена за кг (руб)</label><input type="number" id="e2" value="${item.cost_per_kg}" placeholder="1200"><label>Плотность (г/см³)</label><input id="e3" value="${item.density || 1.24}" placeholder="1.24">`;
+        }
+    }
+
+    function saveEditor() {
+        const v1 = document.getElementById('e1').value;
+        const v2 = parseFloat(document.getElementById('e2').value);
+        const v3 = document.getElementById('e3').value;
+        if (currentEditMode === 'printer') {
+            const obj = { name: v1, power: v2, specs: v3 };
+            if (currentEditIndex !== null) data.printers[currentEditIndex] = obj;
+            else data.printers.push(obj);
+        } else {
+            const obj = { type: v1, cost_per_kg: v2, density: parseFloat(v3) };
+            if (currentEditIndex !== null) data.filaments[currentEditIndex] = obj;
+            else data.filaments.push(obj);
+        }
+        saveToStorage();
+        switchPage('page-manage', null);
+    }
+
+    function deleteItem(mode) {
+        const list = mode === 'printer' ? data.printers : data.filaments;
+        if (list.length > 1) {
+            const idx = mode === 'printer' ? data.currentPrinterIndex : data.currentFilamentIndex;
+            list.splice(idx, 1);
+            if (mode === 'printer') {
+                if (data.currentPrinterIndex >= list.length) data.currentPrinterIndex = list.length - 1;
+            } else {
+                if (data.currentFilamentIndex >= list.length) data.currentFilamentIndex = list.length - 1;
+            }
+            saveToStorage();
+            updateManageLists();
+        } else {
+            alert(`Нельзя удалить последний ${mode === 'printer' ? 'принтер' : 'филамент'}`);
+        }
+    }
+
+    function calculate() {
+        const quantity = parseInt(document.getElementById('quantity').value) || 1;
+        const weightOne = parseFloat(document.getElementById('weight').value) || 0;
+        const totalWeight = weightOne * quantity;
+        
+        const hours = parseFloat(document.getElementById('hours').value) || 0;
+        const minutes = parseFloat(document.getElementById('mins').value) || 0;
+        const totalTimeHours = (hours + minutes / 60) * quantity;
+        
+        const elecPrice = parseFloat(document.getElementById('elec-price').value) || 0;
+        const extra = parseFloat(document.getElementById('extra-cost').value) || 0;
+        const amortPerc = parseFloat(document.getElementById('amort-perc').value) || 0;
+
+        data.lastElectricityCost = elecPrice;
+        saveToStorage();
+
+        const p = data.printers[data.currentPrinterIndex];
+        const f = data.filaments[data.currentFilamentIndex];
+        
+        const costMat = (totalWeight / 1000) * f.cost_per_kg;
+        const costElec = (p.power * totalTimeHours / 1000) * elecPrice;
+        const baseTotal = costMat + costElec + extra;
+        const amortAmount = baseTotal * (amortPerc / 100);
+        const total = baseTotal + amortAmount;
+
+        const costPerUnit = total / quantity;
+        const recommendedPricePerUnit = costPerUnit * 3;
+        const recommendedTotal = total * 3;
+
+        const res = document.getElementById('result');
+        res.style.display = 'block';
+        res.innerHTML = `
+            <div style="font-size:28px; font-weight:bold; color: var(--accent-color);">${total.toFixed(2)} руб.</div>
+            <div style="font-size:13px; color:#8e8e93; margin-top: 5px;">📦 За ${quantity} шт. (вес: ${totalWeight.toFixed(1)} г, время: ${totalTimeHours.toFixed(2)} ч)</div>
+            <div style="font-size:13px; color:#8e8e93; margin-top: 5px;">🧵 Пластик: ${costMat.toFixed(2)} руб. | ⚡ Энергия: ${costElec.toFixed(2)} руб. | 💰 Доп.: ${extra.toFixed(2)} руб. | 📊 Амортизация (${amortPerc}%): ${amortAmount.toFixed(2)} руб.</div>
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #48484a;">
+                <div style="font-size: 15px; font-weight: bold; color: #8e8e93;">Себестоимость 1 модели:</div>
+                <div style="font-size: 22px; font-weight: bold; color: var(--accent-color);">${costPerUnit.toFixed(2)} руб.</div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #48484a;">
+                <div style="font-size: 15px; font-weight: bold; color: var(--success-color);">💰 Рекомендованная цена (x3):</div>
+                <div style="font-size: 18px; font-weight: bold;">${recommendedTotal.toFixed(0)} руб. (за ${quantity} шт.)</div>
+                <div style="font-size: 18px; font-weight: bold; margin-top: 6px; color: var(--success-color);">${recommendedPricePerUnit.toFixed(0)} руб. (за 1 шт.)</div>
+            </div>
+        `;
+        res.scrollIntoView({behavior:'smooth'});
+    }
+
+    window.onload = loadFromStorage;
+</script>
 </body>
 </html>
