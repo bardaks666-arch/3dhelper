@@ -1,98 +1,98 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import requests
-import uuid
+from openai import OpenAI
 import json
 import re
 import os
 from dotenv import load_dotenv
 
-# Загружаем переменные из .env
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-# Берем ключ из переменной окружения
-GIGACHAT_API_KEY = os.getenv("GIGACHAT_API_KEY")
+# Берём ключ из переменных окружения
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-if not GIGACHAT_API_KEY:
-    print("=" * 50)
-    print("❌ ОШИБКА: Не найден API ключ GIGACHAT_API_KEY")
-    print("💡 На Render: добавьте переменную окружения в разделе Environment")
-    print("💡 Локально: создайте файл .env и напишите: GIGACHAT_API_KEY=ваш_ключ")
-    print("=" * 50)
+if not OPENROUTER_API_KEY:
+    print("❌ ОШИБКА: Не найден API ключ OPENROUTER_API_KEY")
+    print("💡 Добавьте переменную окружения на Render или создайте файл .env")
 
-ACCESS_TOKEN = None
-
-def get_gigachat_token():
-    global ACCESS_TOKEN
-    try:
-        url = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-            "RqUID": str(uuid.uuid4()),
-            "Authorization": f"Basic {GIGACHAT_API_KEY}"
-        }
-        data = "scope=GIGACHAT_API_PERS"
-        
-        print("🔄 Получение токена...")
-        response = requests.post(url, headers=headers, data=data, verify=False)
-        
-        if response.status_code == 200:
-            ACCESS_TOKEN = response.json()["access_token"]
-            print("✅ Токен получен!")
-            return ACCESS_TOKEN
-        else:
-            print(f"❌ Ошибка получения токена: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
+def call_venice_llm(prompt):
+    """Вызов бесплатной Venice модели через OpenRouter"""
+    if not OPENROUTER_API_KEY:
         return None
-
-def call_gigachat(prompt):
-    global ACCESS_TOKEN
-    
-    if not ACCESS_TOKEN:
-        ACCESS_TOKEN = get_gigachat_token()
-        if not ACCESS_TOKEN:
-            return None
     
     try:
-        url = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
+        # Создаём клиент, совместимый с OpenAI API
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=OPENROUTER_API_KEY,
+        )
+        
+        # Дополнительные заголовки для идентификации приложения [citation:9]
+        extra_headers = {
+            "HTTP-Referer": "https://3dhelper.onrender.com",  # ваш сайт
+            "X-Title": "3D Hub Pro"  # название приложения
         }
         
-        payload = {
-            "model": "GigaChat",
-            "messages": [
-                {"role": "system", "content": "Ты эксперт по 3D печати. Отвечай только JSON массивом."},
+        response = client.chat.completions.create(
+            model="cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "Ты эксперт по 3D печати. Отвечай только JSON массивом. Никакого другого текста."
+                },
                 {"role": "user", "content": prompt}
             ],
-            "temperature": 0.8,
-            "max_tokens": 2000
-        }
+            temperature=0.8,
+            max_tokens=2000,
+            extra_headers=extra_headers
+        )
         
-        response = requests.post(url, headers=headers, json=payload, verify=False)
+        content = response.choices[0].message.content
         
-        if response.status_code == 200:
-            result = response.json()
-            content = result["choices"][0]["message"]["content"]
-            json_match = re.search(r'\[[\s\S]*\]', content)
-            if json_match:
-                return json.loads(json_match.group(0))
-        elif response.status_code == 401:
-            ACCESS_TOKEN = None
-            return call_gigachat(prompt)
-        
+        # Извлекаем JSON из ответа
+        json_match = re.search(r'\[[\s\S]*\]', content)
+        if json_match:
+            return json.loads(json_match.group(0))
         return None
+        
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
+        print(f"❌ Ошибка вызова Venice: {e}")
         return None
+
+# Функция для генерации вопросов
+def generate_quiz_questions(difficulty):
+    """Генерация 3 вопросов для викторины"""
+    
+    difficulty_text = {
+        "easy": "начального уровня (базовые знания о 3D печати: PLA, ABS, основы слайсинга)",
+        "medium": "среднего уровня (опытный пользователь: калибровка, ретракты, поддержки)",
+        "hard": "экспертного уровня (сложные технические нюансы, химия материалов)"
+    }
+    
+    prompt = f"""Сгенерируй 3 интересных вопроса о 3D печати {difficulty_text[difficulty]}.
+
+Верни ТОЛЬКО JSON массив из 3 объектов. Каждый объект должен содержать поля:
+- question: текст вопроса
+- options: массив из 4 вариантов ответа
+- correct: число от 0 до 3 (индекс правильного ответа)
+- explanation: подробное объяснение почему ответ правильный (2-3 предложения)
+
+Пример формата:
+[
+  {{
+    "question": "Что означает PLA?",
+    "options": ["Полилактид", "Полиэтилен", "Полиамид", "Полиуретан"],
+    "correct": 0,
+    "explanation": "PLA (полилактид) - биоразлагаемый пластик на основе кукурузного крахмала, самый популярный материал для начинающих."
+  }}
+]
+
+Вопросы должны быть разнообразными: материалы, настройки слайсера, калибровка, пост-обработка, типы принтеров."""
+    
+    return call_venice_llm(prompt)
 
 @app.route('/')
 def index():
@@ -100,46 +100,41 @@ def index():
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "api_ready": OPENROUTER_API_KEY is not None})
 
 @app.route('/generate_quiz', methods=['POST'])
 def generate_quiz():
-    print("📨 Получен запрос на генерацию")
+    if not OPENROUTER_API_KEY:
+        return jsonify({"success": False, "error": "API ключ не настроен"}), 500
+    
+    print("📨 Получен запрос на генерацию викторины")
     try:
         data = request.json
         difficulty = data.get('difficulty', 'medium')
         
-        difficulty_text = {
-            "easy": "начального уровня",
-            "medium": "среднего уровня",
-            "hard": "экспертного уровня"
-        }
+        questions = generate_quiz_questions(difficulty)
         
-        prompt = f"""Сгенерируй 3 вопроса о 3D печати {difficulty_text[difficulty]}.
-Верни ТОЛЬКО JSON массив. Каждый вопрос имеет поля:
-- question (текст вопроса)
-- options (массив из 4 вариантов)
-- correct (индекс правильного ответа 0-3)
-- explanation (объяснение)
-
-Пример: [{{"question": "Что такое PLA?", "options": ["Пластик", "Металл", "Дерево", "Стекло"], "correct": 0, "explanation": "PLA - это пластик"}}]"""
-        
-        questions = call_gigachat(prompt)
-        
-        if questions:
-            return jsonify({"success": True, "questions": questions})
+        if questions and len(questions) >= 3:
+            print(f"✅ Сгенерировано {len(questions)} вопросов")
+            return jsonify({"success": True, "questions": questions[:3]})
         else:
-            return jsonify({"success": False, "error": "Ошибка генерации"}), 500
+            return jsonify({"success": False, "error": "Ошибка генерации вопросов"}), 500
+            
     except Exception as e:
+        print(f"❌ Ошибка: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🚀 ЗАПУСК СЕРВЕРА")
+    print("🚀 ЗАПУСК СЕРВЕРА С OPENROUTER (VENICE)")
     print("=" * 50)
     print("📍 Откройте в браузере: http://localhost:5001")
-    print("💡 Нажмите Ctrl+C для остановки")
+    print("🤖 Модель: Dolphin Mistral 24B Venice Edition (бесплатно)")
     print("-" * 50)
     
-    get_gigachat_token()
+    if OPENROUTER_API_KEY:
+        print("✅ API ключ найден")
+    else:
+        print("⚠️ ВНИМАНИЕ: API ключ не найден!")
+    
     app.run(host='0.0.0.0', port=5001, debug=False)
