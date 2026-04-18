@@ -3,8 +3,3 @@ gunicorn==22.0.0
 requests==2.31.0
 python-dotenv==1.0.1
 flask-cors==4.0.0
-<<<<<<< HEAD
-openai>=1.0.0
-=======
-openai>=1.0.0
->>>>>>> bed1cb596c67da8c5df7c092b525493e7f5bb42a
