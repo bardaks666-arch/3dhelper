@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Hub Pro</title>
+    <title>3D Hub Pro - с ИИ викториной</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <style>
         :root {
             --bg-color: #000000; --card-bg: #1c1c1e; --text-color: #ffffff;
             --accent-color: #007aff; --danger-color: #ff453a; --success-color: #32d74b;
             --warning-color: #ff9f0a; --input-bg: #2c2c2e; --nav-bg: #121212;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -36,7 +40,7 @@
             display: block;
         }
 
-        /* Главное меню (крупные значки) */
+        /* Главное меню */
         .main-menu {
             display: flex;
             flex-direction: column;
@@ -77,7 +81,6 @@
             color: #8e8e93;
         }
 
-        /* Карточки */
         .container-box {
             background: var(--card-bg);
             padding: 20px;
@@ -136,6 +139,10 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 16px;
+            transition: opacity 0.2s;
+        }
+        button:active {
+            opacity: 0.8;
         }
         .btn-main {
             background-color: var(--accent-color);
@@ -176,7 +183,6 @@
             line-height: 1.6;
         }
 
-        /* Гайды */
         .guide-item {
             background: var(--card-bg);
             padding: 15px;
@@ -323,7 +329,7 @@
             font-weight: bold;
         }
         
-        /* ===== СТИЛИ ДЛЯ ВИКТОРИНЫ (добавлены) ===== */
+        /* Стили для викторины */
         .difficulty-selector {
             display: flex;
             gap: 10px;
@@ -355,8 +361,8 @@
             transition: all 0.2s ease;
             border: 1px solid transparent;
         }
-        .quiz-option:hover {
-            background: #3a3a3c;
+        .quiz-option:active {
+            transform: scale(0.99);
         }
         .quiz-option.correct {
             background: rgba(50, 215, 75, 0.2);
@@ -403,12 +409,27 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .server-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 5px var(--success-color);
+        }
+        .status-offline {
+            background-color: var(--danger-color);
+        }
     </style>
 </head>
 <body>
 
     <div class="content">
-        <!-- Главный экран с крупными значками -->
+        <!-- Главный экран -->
         <div id="page-main" class="page active">
             <div class="main-menu">
                 <div class="menu-card" onclick="switchPage('page-calc', null)">
@@ -425,7 +446,6 @@
                         <p>Инструкции и калибровка</p>
                     </div>
                 </div>
-                <!-- НОВАЯ КНОПКА: AI Викторина -->
                 <div class="menu-card" onclick="switchPage('page-quiz', null)">
                     <div class="menu-icon">🤖</div>
                     <div class="menu-text">
@@ -443,25 +463,22 @@
             </div>
         </div>
 
-        <!-- Страница калькулятора (БЕЗ ИЗМЕНЕНИЙ) -->
+        <!-- Страница калькулятора -->
         <div id="page-calc" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
                 <h2>3D Калькулятор</h2>
                 
-                <!-- Выбор принтера -->
                 <div class="input-group">
                     <label>🖨️ Принтер</label>
                     <select id="edit-printer-select" onchange="saveSelection()"></select>
                 </div>
                 
-                <!-- Выбор филамента -->
                 <div class="input-group">
                     <label>🧵 Филамент</label>
                     <select id="filament-select" onchange="saveSelection()"></select>
                 </div>
                 
-                <!-- Кнопка настройки (ведет на отдельный экран) -->
                 <button class="btn-settings" onclick="switchPage('page-manage', null)">⚙️ Настройки (филамент/принтер)</button>
                 
                 <div class="settings-panel">
@@ -489,13 +506,12 @@
             </div>
         </div>
 
-        <!-- Страница управления принтерами и филаментами (БЕЗ ИЗМЕНЕНИЙ) -->
+        <!-- Страница управления -->
         <div id="page-manage" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-calc', null)">← К калькулятору</div>
                 <h2>Управление</h2>
                 
-                <!-- Принтеры -->
                 <div class="settings-panel">
                     <h3>🖨️ Принтеры</h3>
                     <div id="printers-list"></div>
@@ -505,7 +521,6 @@
                     </div>
                 </div>
                 
-                <!-- Филаменты -->
                 <div class="settings-panel">
                     <h3>🧵 Филаменты</h3>
                     <div id="filaments-list"></div>
@@ -517,12 +532,15 @@
             </div>
         </div>
         
-        <!-- НОВАЯ СТРАНИЦА: AI Викторина -->
+        <!-- Страница AI Викторины -->
         <div id="page-quiz" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
                 <h2>🤖 AI Викторина</h2>
-                <p style="text-align: center; font-size: 13px; color: #8e8e93; margin-bottom: 15px;">Вопросы генерирует GigaChat</p>
+                <p style="text-align: center; font-size: 13px; color: #8e8e93; margin-bottom: 15px;">
+                    <span id="server-status-indicator"></span>
+                    Вопросы генерирует GigaChat
+                </p>
                 
                 <div class="difficulty-selector">
                     <button class="difficulty-btn" data-diff="easy" onclick="setDifficulty('easy')">🌱 Новичок</button>
@@ -535,7 +553,7 @@
             </div>
         </div>
         
-        <!-- Страница гайдов (БЕЗ ИЗМЕНЕНИЙ) -->
+        <!-- Страница гайдов -->
         <div id="page-guides" class="page">
             <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
             <div id="guide-categories">
@@ -589,7 +607,7 @@
             <div id="guide-temp-tower" class="guide-content">
                 <div class="back-btn" onclick="showCategory('cat-filament-calib')">← К калибровкам</div>
                 <div class="container-box">
-                    <h3 style="margin-top:0; font-size: 18px;">Калибровка температуры печати для филамента(прутка) - Температурная башня</h3>
+                    <h3 style="margin-top:0; font-size: 18px;">Калибровка температуры печати для филамента - Температурная башня</h3>
                     
                     <p style="font-size:14px; color:#ccc; margin-bottom: 15px;">
                         Помогает подобрать оптимальную температуру печати (баланс прочности и качества).
@@ -614,12 +632,6 @@
                     <p style="font-size:13px; margin-bottom:15px; line-height:1.6;">
                         Бери не самый красивый и не самый прочный этаж, а тот, где все показатели в балансе.
                     </p>
-
-                    <label>Признаки:</label>
-                    <div style="font-size:13px; margin-bottom:15px; line-height:1.6;">
-                        • <b>Слишком высокая температура</b> → сопли, блеск, много нитей<br>
-                        • <b>Слишком низкая температура</b> → плохая прочность, шероховатость
-                    </div>
 
                     <div style="background:#3a3a3c; padding:12px; border-radius:12px; font-size:13px; margin-bottom:20px; border-left:4px solid var(--accent-color);">
                         <b>Важно:</b><br>
@@ -735,7 +747,7 @@
             </div>
         </div>
 
-        <!-- Главные настройки (заглушка) -->
+        <!-- Главные настройки -->
         <div id="page-main-settings" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
@@ -748,7 +760,7 @@
             </div>
         </div>
 
-        <!-- Страница редактора (для добавления/изменения) -->
+        <!-- Страница редактора -->
         <div id="editor-scene" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-manage', null)">← Назад</div>
@@ -761,16 +773,37 @@
     </div>
 
 <script>
-    vkBridge.send("VKWebAppInit");
+    // Инициализация VK Bridge (если нужно)
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send("VKWebAppInit");
+    }
 
-    // ===== АДРЕС ТВОЕГО VPS ДЛЯ ВИКТОРИНЫ =====
+    // ===== КОНФИГУРАЦИЯ СЕРВЕРА =====
+    // АДРЕС ТВОЕГО VPS ДЛЯ ВИКТОРИНЫ
     const SERVER_URL = "http://195.58.48.53:5001";
 
-    let data = {
-        currentPrinterIndex: 0, currentFilamentIndex: 0, lastElectricityCost: 5.5,
-        printers: [{ name: "ad5x/5m/5mpro", power: 650, specs: "220x220x220" }],
-        filaments: [{ type: "PLA", cost_per_kg: 1000, density: 1.24 }, { type: "PETG", cost_per_kg: 900, density: 1.27 }]
-    };
+    // ===== ПРОВЕРКА СТАТУСА СЕРВЕРА =====
+    async function checkServerStatus() {
+        const indicator = document.getElementById('server-status-indicator');
+        if (!indicator) return;
+        
+        try {
+            const response = await fetch(`${SERVER_URL}/health`, {
+                method: 'GET',
+                timeout: 5000
+            });
+            if (response.ok) {
+                indicator.innerHTML = '<span class="server-status status-online"></span> Сервер онлайн';
+                indicator.style.color = '#32d74b';
+            } else {
+                indicator.innerHTML = '<span class="server-status status-offline"></span> Сервер недоступен';
+                indicator.style.color = '#ff453a';
+            }
+        } catch (error) {
+            indicator.innerHTML = '<span class="server-status status-offline"></span> Сервер недоступен';
+            indicator.style.color = '#ff453a';
+        }
+    }
 
     // ===== ФУНКЦИИ ДЛЯ ВИКТОРИНЫ =====
     let quizState = {
@@ -802,16 +835,25 @@
         renderQuizLoading();
         
         try {
-            // Запрос идёт на твой VPS
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
             const response = await fetch(`${SERVER_URL}/generate_quiz`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ difficulty: quizState.difficulty })
+                body: JSON.stringify({ difficulty: quizState.difficulty }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
             
             const result = await response.json();
             
-            if (result.success && result.questions) {
+            if (result.success && result.questions && result.questions.length > 0) {
                 quizState.questions = result.questions;
                 quizState.currentIndex = 0;
                 quizState.score = 0;
@@ -822,7 +864,11 @@
                 throw new Error(result.error || 'Не удалось получить вопросы');
             }
         } catch (error) {
-            renderQuizError(error.message);
+            if (error.name === 'AbortError') {
+                renderQuizError('Превышено время ожидания ответа от сервера');
+            } else {
+                renderQuizError(error.message || 'Ошибка соединения с сервером');
+            }
         } finally {
             quizState.loading = false;
         }
@@ -830,27 +876,32 @@
     
     function renderQuizLoading() {
         const container = document.getElementById('quiz-container');
+        if (!container) return;
         container.innerHTML = `
             <div class="loading-spinner">
                 <div class="spinner"></div>
                 <div style="color: #8e8e93;">🤖 GigaChat генерирует вопросы...</div>
+                <div style="color: #8e8e93; font-size: 12px; margin-top: 10px;">Это может занять до 15 секунд</div>
             </div>
         `;
     }
     
     function renderQuizError(errorMsg) {
         const container = document.getElementById('quiz-container');
+        if (!container) return;
         container.innerHTML = `
             <div class="warning-text" style="text-align: center;">
                 ⚠️ Ошибка: ${errorMsg}<br><br>
-                💡 Убедитесь, что сервер запущен
+                💡 Убедитесь, что сервер запущен<br>
+                📡 Адрес сервера: ${SERVER_URL}
             </div>
+            <button class="btn-secondary" onclick="startQuiz()" style="margin-top: 10px;">🔄 Повторить</button>
         `;
     }
     
     function renderQuizQuestion() {
         const container = document.getElementById('quiz-container');
-        if (!quizState.currentQuestion) return;
+        if (!container || !quizState.currentQuestion) return;
         
         const q = quizState.currentQuestion;
         const progress = `${quizState.currentIndex + 1} / ${quizState.questions.length}`;
@@ -879,13 +930,13 @@
             if (quizState.currentIndex + 1 < quizState.questions.length) {
                 nextButton = '<button class="btn-main" style="margin-top: 20px;" onclick="nextQuestion()">Следующий вопрос →</button>';
             } else {
-                nextButton = '<button class="btn-main" style="margin-top: 20px;" onclick="finishQuiz()">🏁 Завершить</button>';
+                nextButton = '<button class="btn-success" style="margin-top: 20px;" onclick="finishQuiz()">🏁 Завершить викторину</button>';
             }
         }
         
         container.innerHTML = `
-            <div class="quiz-progress">${progress}</div>
-            <div class="quiz-question">${q.question}</div>
+            <div class="quiz-progress">📊 ${progress}</div>
+            <div class="quiz-question">❓ ${q.question}</div>
             ${optionsHtml}
             ${explanationHtml}
             ${nextButton}
@@ -917,15 +968,36 @@
     function finishQuiz() {
         const total = quizState.questions.length;
         const percent = Math.round(quizState.score / total * 100);
-        let message = percent === 100 ? "🏆 Идеально!" : percent >= 70 ? "👍 Отлично!" : "📚 Учись дальше!";
+        let message = "";
+        let emoji = "";
+        
+        if (percent === 100) {
+            message = "Идеально! Ты настоящий эксперт 3D печати!";
+            emoji = "🏆";
+        } else if (percent >= 70) {
+            message = "Отлично! Ты хорошо разбираешься в теме!";
+            emoji = "👍";
+        } else if (percent >= 50) {
+            message = "Неплохо! Но есть куда расти!";
+            emoji = "📚";
+        } else {
+            message = "Попробуй еще раз! Изучи гайды и возвращайся!";
+            emoji = "💪";
+        }
         
         const container = document.getElementById('quiz-container');
+        if (!container) return;
+        
         container.innerHTML = `
             <div style="text-align: center; padding: 20px;">
-                <div style="font-size: 48px; font-weight: bold; color: var(--accent-color);">${quizState.score}/${total}</div>
-                <div>${percent}%</div>
-                <div style="margin: 20px 0;">${message}</div>
-                <button class="btn-main" onclick="startQuiz()">🔄 Новая игра</button>
+                <div style="font-size: 64px; margin-bottom: 10px;">${emoji}</div>
+                <div style="font-size: 48px; font-weight: bold; color: var(--accent-color); margin: 10px 0;">${quizState.score}/${total}</div>
+                <div style="font-size: 18px; margin-bottom: 10px;">${percent}% правильных ответов</div>
+                <div style="margin: 20px 0; padding: 15px; background: var(--input-bg); border-radius: 12px;">
+                    ${message}
+                </div>
+                <button class="btn-main" onclick="startQuiz()">🔄 Новая викторина</button>
+                <button class="btn-secondary" style="margin-top: 10px;" onclick="switchPage('page-main', null)">🏠 На главную</button>
             </div>
         `;
     }
@@ -933,7 +1005,8 @@
     // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ =====
     function switchPage(pageId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) targetPage.classList.add('active');
         
         if (pageId === 'page-guides') {
             showCategory('main');
@@ -943,6 +1016,9 @@
         }
         if (pageId === 'page-manage') {
             updateManageLists();
+        }
+        if (pageId === 'page-quiz') {
+            checkServerStatus();
         }
     }
     
@@ -959,8 +1035,8 @@
                 printersDiv.innerHTML += `
                     <div class="list-item ${selectedClass}" onclick="selectPrinter(${i})">
                         <div class="list-item-info">
-                            <div class="list-item-name">${p.name}</div>
-                            <div class="list-item-desc">${p.power} Вт | ${p.specs}</div>
+                            <div class="list-item-name">${escapeHtml(p.name)}</div>
+                            <div class="list-item-desc">${p.power} Вт | ${escapeHtml(p.specs)}</div>
                         </div>
                         <button class="btn-secondary" style="width: auto; padding: 8px 16px; margin: 0;" onclick="event.stopPropagation(); showEditor('printer', true, ${i})">✏️</button>
                     </div>
@@ -976,7 +1052,7 @@
                 filamentsDiv.innerHTML += `
                     <div class="list-item ${selectedClass}" onclick="selectFilament(${i})">
                         <div class="list-item-info">
-                            <div class="list-item-name">${f.type}</div>
+                            <div class="list-item-name">${escapeHtml(f.type)}</div>
                             <div class="list-item-desc">${f.cost_per_kg} руб/кг | плотность ${f.density} г/см³</div>
                         </div>
                         <button class="btn-secondary" style="width: auto; padding: 8px 16px; margin: 0;" onclick="event.stopPropagation(); showEditor('filament', true, ${i})">✏️</button>
@@ -984,6 +1060,16 @@
                 `;
             });
         }
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
     
     function selectPrinter(index) {
@@ -1023,10 +1109,17 @@
         if (target) target.classList.add('active');
     }
 
+    let data = {
+        currentPrinterIndex: 0, currentFilamentIndex: 0, lastElectricityCost: 5.5,
+        printers: [{ name: "ad5x/5m/5mpro", power: 650, specs: "220x220x220" }],
+        filaments: [{ type: "PLA", cost_per_kg: 1000, density: 1.24 }, { type: "PETG", cost_per_kg: 900, density: 1.27 }]
+    };
+
     function loadFromStorage() {
         const saved = localStorage.getItem('3d_hub_v12_full');
         if (saved) data = JSON.parse(saved);
         updateUI();
+        checkServerStatus();
     }
 
     function saveToStorage() {
@@ -1089,10 +1182,10 @@
         fields.innerHTML = '';
         if (mode === 'printer') {
             const item = (currentEditIndex !== null) ? data.printers[currentEditIndex] : {name:'', power:'', specs:''};
-            fields.innerHTML = `<label>Название принтера</label><input id="e1" value="${item.name}" placeholder="Например: Bambu Lab X1C"><label>Мощность (Вт)</label><input type="number" id="e2" value="${item.power}" placeholder="300"><label>Размер стола</label><input id="e3" value="${item.specs}" placeholder="256x256x256">`;
+            fields.innerHTML = `<label>Название принтера</label><input id="e1" value="${escapeHtml(item.name)}" placeholder="Например: Bambu Lab X1C"><label>Мощность (Вт)</label><input type="number" id="e2" value="${item.power}" placeholder="300"><label>Размер стола</label><input id="e3" value="${escapeHtml(item.specs)}" placeholder="256x256x256">`;
         } else {
             const item = (currentEditIndex !== null) ? data.filaments[currentEditIndex] : {type:'', cost_per_kg:'', density:''};
-            fields.innerHTML = `<label>Тип филамента</label><input id="e1" value="${item.type}" placeholder="PLA, PETG, ABS..."><label>Цена за кг (руб)</label><input type="number" id="e2" value="${item.cost_per_kg}" placeholder="1200"><label>Плотность (г/см³)</label><input id="e3" value="${item.density || 1.24}" placeholder="1.24">`;
+            fields.innerHTML = `<label>Тип филамента</label><input id="e1" value="${escapeHtml(item.type)}" placeholder="PLA, PETG, ABS..."><label>Цена за кг (руб)</label><input type="number" id="e2" value="${item.cost_per_kg}" placeholder="1200"><label>Плотность (г/см³)</label><input id="e3" value="${item.density || 1.24}" placeholder="1.24">`;
         }
     }
 
@@ -1178,7 +1271,10 @@
         res.scrollIntoView({behavior:'smooth'});
     }
 
-    window.onload = loadFromStorage;
+    window.onload = () => {
+        loadFromStorage();
+        setInterval(checkServerStatus, 30000);
+    };
 </script>
 </body>
 </html>
