@@ -85,6 +85,7 @@ def call_gigachat(prompt):
             "max_tokens": 2000
         }
         
+        # ВАЖНО: verify=False отключает проверку SSL-сертификата
         response = requests.post(url, headers=headers, json=payload, verify=False)
         
         if response.status_code == 200:
@@ -99,6 +100,7 @@ def call_gigachat(prompt):
             return call_gigachat(prompt)
         else:
             print(f"❌ Ошибка API: {response.status_code}")
+            print(f"Ответ: {response.text}")
             return None
             
     except Exception as e:
@@ -106,10 +108,11 @@ def call_gigachat(prompt):
         return None
 
 def generate_quiz_questions(difficulty):
+    """Генерация 3 вопросов для викторины"""
     difficulty_text = {
-        "easy": "начального уровня (базовые знания о 3D печати)",
-        "medium": "среднего уровня (для опытных пользователей)",
-        "hard": "экспертного уровня (сложные технические вопросы)"
+        "easy": "начального уровня (базовые знания о 3D печати: PLA, ABS, основы слайсинга)",
+        "medium": "среднего уровня (опытный пользователь: калибровка, ретракты, поддержки)",
+        "hard": "экспертного уровня (сложные технические нюансы, химия материалов)"
     }
     
     prompt = f"""Сгенерируй 3 интересных вопроса о 3D печати {difficulty_text[difficulty]}.
@@ -117,18 +120,20 @@ def generate_quiz_questions(difficulty):
 Верни ТОЛЬКО JSON массив из 3 объектов. Каждый объект должен содержать поля:
 - question: текст вопроса
 - options: массив из 4 вариантов ответа
-- correct: число от 0 до 3
-- explanation: объяснение (2-3 предложения)
+- correct: число от 0 до 3 (индекс правильного ответа)
+- explanation: подробное объяснение почему ответ правильный (2-3 предложения)
 
-Пример:
+Пример формата:
 [
   {{
     "question": "Что означает PLA?",
     "options": ["Полилактид", "Полиэтилен", "Полиамид", "Полиуретан"],
     "correct": 0,
-    "explanation": "PLA (полилактид) - биоразлагаемый пластик на основе кукурузного крахмала."
+    "explanation": "PLA (полилактид) - биоразлагаемый пластик на основе кукурузного крахмала, самый популярный материал для начинающих."
   }}
-]"""
+]
+
+Вопросы должны быть разнообразными: материалы, настройки слайсера, калибровка, пост-обработка, типы принтеров."""
     
     return call_gigachat(prompt)
 
@@ -145,28 +150,35 @@ def generate_quiz():
     if not GIGACHAT_API_KEY:
         return jsonify({"success": False, "error": "API ключ не настроен"}), 500
     
-    print("📨 Получен запрос на генерацию")
+    print("📨 Получен запрос на генерацию викторины")
     try:
         data = request.json
         difficulty = data.get('difficulty', 'medium')
+        
         questions = generate_quiz_questions(difficulty)
         
-        if questions:
-            return jsonify({"success": True, "questions": questions})
+        if questions and len(questions) >= 3:
+            print(f"✅ Сгенерировано {len(questions)} вопросов")
+            return jsonify({"success": True, "questions": questions[:3]})
         else:
-            return jsonify({"success": False, "error": "Ошибка генерации"}), 500
+            return jsonify({"success": False, "error": "Ошибка генерации вопросов"}), 500
+            
     except Exception as e:
+        print(f"❌ Ошибка: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     print("=" * 50)
     print("🚀 ЗАПУСК СЕРВЕРА С GIGACHAT")
-    print("📍 http://localhost:5001")
+    print("=" * 50)
+    print("📍 Откройте в браузере: http://localhost:5001")
+    print("🤖 Модель: GigaChat (Сбер)")
     print("-" * 50)
     
     if GIGACHAT_API_KEY:
+        print("✅ API ключ найден")
         get_gigachat_token()
     else:
-        print("⚠️ API ключ не найден!")
+        print("⚠️ ВНИМАНИЕ: API ключ не найден!")
     
     app.run(host='0.0.0.0', port=5001, debug=False)
