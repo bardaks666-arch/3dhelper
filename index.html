@@ -763,13 +763,16 @@
 <script>
     vkBridge.send("VKWebAppInit");
 
+    // ===== АДРЕС ТВОЕГО VPS ДЛЯ ВИКТОРИНЫ =====
+    const SERVER_URL = "http://195.58.48.53:5001";
+
     let data = {
         currentPrinterIndex: 0, currentFilamentIndex: 0, lastElectricityCost: 5.5,
         printers: [{ name: "ad5x/5m/5mpro", power: 650, specs: "220x220x220" }],
         filaments: [{ type: "PLA", cost_per_kg: 1000, density: 1.24 }, { type: "PETG", cost_per_kg: 900, density: 1.27 }]
     };
 
-    // ===== ФУНКЦИИ ДЛЯ ВИКТОРИНЫ (добавлены) =====
+    // ===== ФУНКЦИИ ДЛЯ ВИКТОРИНЫ =====
     let quizState = {
         loading: false,
         currentIndex: 0,
@@ -799,7 +802,8 @@
         renderQuizLoading();
         
         try {
-            const response = await fetch('/generate_quiz', {
+            // Запрос идёт на твой VPS
+            const response = await fetch(`${SERVER_URL}/generate_quiz`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ difficulty: quizState.difficulty })
@@ -926,7 +930,7 @@
         `;
     }
 
-    // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ) =====
+    // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ =====
     function switchPage(pageId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(pageId).classList.add('active');
