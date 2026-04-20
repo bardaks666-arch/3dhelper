@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>3D Hub Pro - с ИИ викториной</title>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <style>
         :root {
             --bg-color: #000000; --card-bg: #1c1c1e; --text-color: #ffffff;
@@ -40,7 +39,6 @@
             display: block;
         }
 
-        /* Главное меню */
         .main-menu {
             display: flex;
             flex-direction: column;
@@ -329,7 +327,6 @@
             font-weight: bold;
         }
         
-        /* Стили для викторины */
         .difficulty-selector {
             display: flex;
             gap: 10px;
@@ -471,7 +468,7 @@
             </div>
         </div>
 
-        <!-- Страница калькулятора -->
+        <!-- Страница калькулятора (оставляем как было) -->
         <div id="page-calc" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
@@ -540,7 +537,7 @@
             </div>
         </div>
         
-        <!-- Страница AI Викторины -->
+        <!-- Страница AI Викторины (ИСПРАВЛЕННАЯ ВЕРСИЯ) -->
         <div id="page-quiz" class="page">
             <div class="container-box">
                 <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
@@ -562,7 +559,7 @@
             </div>
         </div>
         
-        <!-- Страница гайдов -->
+        <!-- Страница гайдов (оставляем как было) -->
         <div id="page-guides" class="page">
             <div class="back-btn" onclick="switchPage('page-main', null)">← На главную</div>
             <div id="guide-categories">
@@ -782,17 +779,13 @@
     </div>
 
 <script>
-    // Инициализация VK Bridge (если нужно)
+    // ===== КОНФИГУРАЦИЯ СЕРВЕРА (ИСПРАВЛЕНО) =====
+    const SERVER_URL = "http://195.58.48.53:5000";
+    
+    // Инициализация
     if (typeof vkBridge !== 'undefined') {
         vkBridge.send("VKWebAppInit");
     }
-
-    // ===== КОНФИГУРАЦИЯ СЕРВЕРА =====
-    // Адрес твоего VPS сервера (работает через Nginx на порту 80)
-    const SERVER_URL = "http://195.58.48.53:5000";
-    
-    // Альтернативный URL с портом (если нужно)
-    // const SERVER_URL = "https://educational-converter-applicants-pharmaceuticals.trycloudflare.com";
 
     // ===== ПРОВЕРКА СТАТУСА СЕРВЕРА =====
     async function checkServerStatus() {
@@ -1041,7 +1034,7 @@
         });
     }
 
-    // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ =====
+    // ===== ОСТАЛЬНЫЕ ФУНКЦИИ (калькулятор и т.д.) =====
     function switchPage(pageId, el) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const targetPage = document.getElementById(pageId);
