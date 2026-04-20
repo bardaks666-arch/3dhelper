@@ -424,6 +424,14 @@
         .status-offline {
             background-color: var(--danger-color);
         }
+        
+        .api-url {
+            font-size: 10px;
+            color: #8e8e93;
+            text-align: center;
+            margin-top: 10px;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -550,6 +558,7 @@
                 
                 <button class="btn-main" onclick="startQuiz()">🎮 Начать викторину</button>
                 <div id="quiz-container" style="margin-top: 20px;"></div>
+                <div class="api-url" id="api-url-display"></div>
             </div>
         </div>
         
@@ -779,27 +788,43 @@
     }
 
     // ===== КОНФИГУРАЦИЯ СЕРВЕРА =====
-    // АДРЕС ТВОЕГО VPS ДЛЯ ВИКТОРИНЫ
-    const SERVER_URL = "http://195.58.48.53:5001";
+    // Адрес твоего VPS сервера (работает через Nginx на порту 80)
+    const SERVER_URL = "http://195.58.48.53";
+    
+    // Альтернативный URL с портом (если нужно)
+    // const SERVER_URL = "http://195.58.48.53:5001";
 
     // ===== ПРОВЕРКА СТАТУСА СЕРВЕРА =====
     async function checkServerStatus() {
         const indicator = document.getElementById('server-status-indicator');
+        const apiUrlDisplay = document.getElementById('api-url-display');
+        
+        if (apiUrlDisplay) {
+            apiUrlDisplay.innerHTML = `📡 API: ${SERVER_URL}/generate_quiz`;
+        }
+        
         if (!indicator) return;
         
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
             const response = await fetch(`${SERVER_URL}/health`, {
                 method: 'GET',
-                timeout: 5000
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+            
             if (response.ok) {
                 indicator.innerHTML = '<span class="server-status status-online"></span> Сервер онлайн';
                 indicator.style.color = '#32d74b';
+                console.log('✅ Сервер доступен');
             } else {
-                indicator.innerHTML = '<span class="server-status status-offline"></span> Сервер недоступен';
-                indicator.style.color = '#ff453a';
+                throw new Error('Server not responding');
             }
         } catch (error) {
+            console.error('❌ Сервер недоступен:', error.message);
             indicator.innerHTML = '<span class="server-status status-offline"></span> Сервер недоступен';
             indicator.style.color = '#ff453a';
         }
@@ -835,6 +860,8 @@
         renderQuizLoading();
         
         try {
+            console.log('Отправка запроса на:', `${SERVER_URL}/generate_quiz`);
+            
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
             
@@ -852,6 +879,7 @@
             }
             
             const result = await response.json();
+            console.log('Получен ответ:', result);
             
             if (result.success && result.questions && result.questions.length > 0) {
                 quizState.questions = result.questions;
@@ -864,6 +892,7 @@
                 throw new Error(result.error || 'Не удалось получить вопросы');
             }
         } catch (error) {
+            console.error('Ошибка:', error);
             if (error.name === 'AbortError') {
                 renderQuizError('Превышено время ожидания ответа от сервера');
             } else {
@@ -915,14 +944,14 @@
             }
             optionsHtml += `
                 <div class="quiz-option ${additionalClass}" onclick="${!quizState.answered ? `selectAnswer(${idx})` : ''}">
-                    ${String.fromCharCode(65 + idx)}. ${opt}
+                    ${String.fromCharCode(65 + idx)}. ${escapeHtml(opt)}
                 </div>
             `;
         });
         
         let explanationHtml = '';
         if (quizState.answered && q.explanation) {
-            explanationHtml = `<div class="explanation">📖 <strong>Объяснение:</strong><br>${q.explanation}</div>`;
+            explanationHtml = `<div class="explanation">📖 <strong>Объяснение:</strong><br>${escapeHtml(q.explanation)}</div>`;
         }
         
         let nextButton = '';
@@ -936,7 +965,7 @@
         
         container.innerHTML = `
             <div class="quiz-progress">📊 ${progress}</div>
-            <div class="quiz-question">❓ ${q.question}</div>
+            <div class="quiz-question">❓ ${escapeHtml(q.question)}</div>
             ${optionsHtml}
             ${explanationHtml}
             ${nextButton}
@@ -1001,6 +1030,16 @@
             </div>
         `;
     }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
 
     // ===== ОРИГИНАЛЬНЫЕ ФУНКЦИИ =====
     function switchPage(pageId, el) {
@@ -1060,16 +1099,6 @@
                 `;
             });
         }
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
     }
     
     function selectPrinter(index) {
@@ -1133,7 +1162,7 @@
         if (fSelect) {
             fSelect.innerHTML = '';
             data.filaments.forEach((f, i) => {
-                fSelect.innerHTML += `<option value="${i}">${f.type} (${f.cost_per_kg} руб/кг)</option>`;
+                fSelect.innerHTML += `<option value="${i}">${escapeHtml(f.type)} (${f.cost_per_kg} руб/кг)</option>`;
             });
             fSelect.value = data.currentFilamentIndex;
         }
@@ -1142,7 +1171,7 @@
         if (pEditSelect) {
             pEditSelect.innerHTML = '';
             data.printers.forEach((p, i) => { 
-                pEditSelect.innerHTML += `<option value="${i}">${p.name} (${p.power} Вт)</option>`; 
+                pEditSelect.innerHTML += `<option value="${i}">${escapeHtml(p.name)} (${p.power} Вт)</option>`; 
             });
             pEditSelect.value = data.currentPrinterIndex;
         }
